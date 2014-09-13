@@ -238,14 +238,20 @@ def menu_func(self, ctx):
     
 
 def register():
-    bpy.utils.register_class(SequencerLetterboxMenu)
-    bpy.utils.register_class(SequencerLetterbox)
+    bpy.utils.register_module(__name__)
+#    bpy.utils.register_class(SequencerLetterboxMenu)
+#    bpy.utils.register_class(SequencerLetterbox)
 
     bpy.types.SEQUENCER_MT_strip.append(menu_func)
 
 def unregister():
-    bpy.utils.unregister_class(SequencerLetterbox)
-    bpy.utils.unregister_class(SequencerLetterboxMenu)
+    bpy.utils.unregister_module(__name__)
+#    bpy.utils.unregister_class(SequencerLetterbox)
+#    bpy.utils.unregister_class(SequencerLetterboxMenu)
 
 if __name__ == "__main__":
+    try:
+        unregister()
+    except:
+        pass
     register()
