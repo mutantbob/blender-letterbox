@@ -16,10 +16,32 @@ class SequencerLetterboxMenu(bpy.types.Menu):
     bl_label = "Letterbox"
 
     def draw(self, ctx):
+
         layout = self.layout
-        layout.operator(SequencerLetterboxCenter.bl_idname, text=SequencerLetterboxCenter.bl_label)
-        layout.operator(SequencerLetterboxWest.bl_idname, text=SequencerLetterboxWest.bl_label)
-        layout.operator(SequencerLetterboxEast.bl_idname, text=SequencerLetterboxEast.bl_label)
+
+        # default operator will keep whatever alignment was last used
+        layout.operator(SequencerLetterbox.bl_idname, text=SequencerLetterbox.bl_label)
+
+        props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox Center")
+        props.align_x=0.5
+        props.align_y=0.5
+
+        props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox East")
+        props.align_x=0
+        props.align_y=0.5
+
+        props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox West")
+        props.align_x=1
+        props.align_y=0.5
+
+        props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox North")
+        props.align_x=0.5
+        props.align_y=0
+
+        props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox South")
+        props.align_x=0.5
+        props.align_y=1
+
 
 
 class SequencerLetterboxArbitrary:
@@ -140,42 +162,19 @@ class SequencerLetterboxArbitrary:
 #
 
 
-class SequencerLetterboxCenter(bpy.types.Operator):
+class SequencerLetterbox(bpy.types.Operator):
     """an operator which adds or ajusts the transform effect on a strip
     to put letterboxes on the left and right or top and bottom
     to center the content and preserve its original aspect ratio"""
     bl_idname = "sequencer.letterbox_center"
-    bl_label = "Letterbox Center"
+    bl_label = "Letterbox"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, ctx):
-        SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene)
-        return {'FINISHED'}
-
-
-#
-
-
-class SequencerLetterboxWest(bpy.types.Operator):
-    """an operator which adds or ajusts the transform effect on a strip
-    to put a letterbox on the left side and the content on the right"""
-    bl_idname = "sequencer.letterbox_west"
-    bl_label = "Letterbox West"
-    bl_options = {'REGISTER', 'UNDO'}
+    align_x = bpy.props.FloatProperty(name="Align X", default=0.5, min=0, max=1.0)
+    align_y = bpy.props.FloatProperty(name="Align Y", default=0.5, min=0, max=1.0)
 
     def execute(self, ctx):
-        SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, 1, 0.5)
-        return {'FINISHED'}
-
-class SequencerLetterboxEast(bpy.types.Operator):
-    """an operator which adds or ajusts the transform effect on a strip
-    to put a letterbox on the left side and the content on the right"""
-    bl_idname = "sequencer.letterbox_east"
-    bl_label = "Letterbox East"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, ctx):
-        SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, 0, 0.5)
+        SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y)
         return {'FINISHED'}
 
 
@@ -188,16 +187,12 @@ def menu_func(self, ctx):
 
 def register():
     bpy.utils.register_class(SequencerLetterboxMenu)
-    bpy.utils.register_class(SequencerLetterboxCenter)
-    bpy.utils.register_class(SequencerLetterboxWest)
-    bpy.utils.register_class(SequencerLetterboxEast)
+    bpy.utils.register_class(SequencerLetterbox)
 
     bpy.types.SEQUENCER_MT_strip.append(menu_func)
 
 def unregister():
-    bpy.utils.unregister_class(SequencerLetterboxEast)
-    bpy.utils.unregister_class(SequencerLetterboxWest)
-    bpy.utils.unregister_class(SequencerLetterboxCenter)
+    bpy.utils.unregister_class(SequencerLetterbox)
     bpy.utils.unregister_class(SequencerLetterboxMenu)
 
 if __name__ == "__main__":
