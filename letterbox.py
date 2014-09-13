@@ -61,7 +61,18 @@ class SequencerLetterboxArbitrary:
         return scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
 
     @classmethod
-    def compute_scale(cls, scene, src_strip):
+    def compute_scale_from_aspect_ratios(cls, scene_aspect_ratio, source_aspect_ratio):
+        if scene_aspect_ratio > source_aspect_ratio:
+            # wider
+            scale_x = source_aspect_ratio / scene_aspect_ratio
+            scale_y = 1
+        else:
+            scale_x = 1
+            scale_y = scene_aspect_ratio / source_aspect_ratio
+        return scale_x, scale_y
+
+    @classmethod
+    def compute_aspect_ratio_for_strip(cls, src_strip):
         if hasattr(src_strip, "scene"):
             # this is a Scene strip
             base_width = src_strip.scene.render.resolution_x
@@ -69,7 +80,6 @@ class SequencerLetterboxArbitrary:
         else:
             base_width = src_strip.elements[0].orig_width
             base_height = src_strip.elements[0].orig_height
-
         if (base_width is None or base_height is None):
             msg = "Unable to determine width&height of base strip.  "
             if (src_strip.type == "IMAGE" or src_strip.type == "MOVIE"):
@@ -91,20 +101,30 @@ class SequencerLetterboxArbitrary:
             else:
                 source_PAR = 1
             source_aspect_ratio = base_width * source_PAR / base_height
+        return source_aspect_ratio
+
+    @classmethod
+    def compute_scale(cls, scene, src_strip):
 
         scene_PAR = cls.scene_pixel_aspect(scene)
-        scene_aspect_ratio = scene_PAR * scene.render.resolution_x / scene.render.resolution_y
-        if scene_aspect_ratio > source_aspect_ratio:
-            # wider
-            scale_x = source_aspect_ratio / scene_aspect_ratio
-            scale_y = 1
-        else:
-            scale_x = 1
-            scale_y = scene_aspect_ratio / source_aspect_ratio
-        return scale_x, scale_y
+        scene_width = scene.render.resolution_x
+        scene_height = scene.render.resolution_y
+
+        source_aspect_ratio = cls.compute_aspect_ratio_for_strip(src_strip)
+
+        scene_aspect_ratio = scene_PAR * scene_width / scene_height
+
+        return cls.compute_scale_from_aspect_ratios(scene_aspect_ratio, source_aspect_ratio)
 
     @classmethod
     def letterbox_arbitrary(cls, strip, scene, align_x=0.5, align_y=0.5):
+        """
+        :param strip: what is our target strip?  It can be a Transform strip of a Scene, Image, or Movie strip; or it can be the Scene, Image, or Movie and the Transform will be located or created.
+        :param scene: the Scene the target strip lives in (used to figure out the scene resolution)
+        :param align_x:
+        :param align_y:
+        :return:
+        """
         if strip is None:
             raise ValueError("You have not selected an action strip to letterbox")
 
@@ -148,9 +168,9 @@ class SequencerLetterboxArbitrary:
             if strip.type == 'TRANSFORM' and strip.input_1 == other_strip:
                 return strip
         ch = other_strip.channel+1
-        s = strip.frame_start
-        e = s + strip.frame_final_duration - 1
-        print("%d, %d"%(s,e))
+        s = other_strip.frame_start
+        e = s + other_strip.frame_final_duration - 1
+        #print("%d, %d"%(s,e))
         effect = scene.sequence_editor.sequences.new_effect("Letterbox", 'TRANSFORM', ch, s, frame_end=e,
                                                             seq1=other_strip)
         # because somehow setting frame_end in the previous method call accomplishes nothing
