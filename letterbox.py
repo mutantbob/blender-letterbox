@@ -20,41 +20,48 @@ class SequencerLetterboxMenu(bpy.types.Menu):
         layout = self.layout
 
         # default operator will keep whatever alignment was last used
-        layout.operator(SequencerLetterbox.bl_idname, text=SequencerLetterbox.bl_label)
+        props = layout.operator(SequencerLetterbox.bl_idname, text=SequencerLetterbox.bl_label)
+        props.strip_DAR=0 #operator should compute fresh value
 
         props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox Center")
         props.align_x=0.5
         props.align_y=0.5
+        props.strip_DAR=0 #operator should compute fresh value
 
         props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox East")
         props.align_x=0
         props.align_y=0.5
+        props.strip_DAR=0
 
         props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox West")
         props.align_x=1
         props.align_y=0.5
+        props.strip_DAR=0
 
         props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox North")
         props.align_x=0.5
         props.align_y=0
+        props.strip_DAR=0
 
         props = layout.operator(SequencerLetterbox.bl_idname, text="Letterbox South")
         props.align_x=0.5
         props.align_y=1
+        props.strip_DAR=0
 
 
 
 class SequencerLetterboxArbitrary:
 
     @classmethod
-    def letterbox_arbitrary_op(cls, scene, align_x=0.5, align_y=0.5):
+    def letterbox_arbitrary_op(cls, scene, align_x=0.5, align_y=0.5, strip_DAR=0.0):
 
-        xform = SequencerLetterboxArbitrary.letterbox_arbitrary(scene.sequence_editor.active_strip, scene, align_x, align_y)
+        xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary(scene.sequence_editor.active_strip, scene, align_x, align_y, strip_DAR)
 
         for strip in scene.sequence_editor.sequences:
             strip.select = ( strip == xform )
         scene.sequence_editor.active_strip = xform
 
+        return xform, strip_DAR
 
     @classmethod
     def scene_pixel_aspect(cls, scene):
@@ -72,7 +79,7 @@ class SequencerLetterboxArbitrary:
         return scale_x, scale_y
 
     @classmethod
-    def compute_aspect_ratio_for_strip(cls, src_strip):
+    def compute_strip_display_aspect_ratio(cls, src_strip):
         if hasattr(src_strip, "scene"):
             # this is a Scene strip
             base_width = src_strip.scene.render.resolution_x
@@ -104,20 +111,20 @@ class SequencerLetterboxArbitrary:
         return source_aspect_ratio
 
     @classmethod
-    def compute_scale(cls, scene, src_strip):
-
+    def compute_scene_display_aspect_ratio(cls, scene):
         scene_PAR = cls.scene_pixel_aspect(scene)
         scene_width = scene.render.resolution_x
         scene_height = scene.render.resolution_y
-
-        source_aspect_ratio = cls.compute_aspect_ratio_for_strip(src_strip)
-
         scene_aspect_ratio = scene_PAR * scene_width / scene_height
-
-        return cls.compute_scale_from_aspect_ratios(scene_aspect_ratio, source_aspect_ratio)
+        return scene_aspect_ratio
 
     @classmethod
-    def letterbox_arbitrary(cls, strip, scene, align_x=0.5, align_y=0.5):
+    def compute_scale(cls, strip_DAR, scene):
+
+        return cls.compute_scale_from_aspect_ratios(cls.compute_scene_display_aspect_ratio(scene), strip_DAR)
+
+    @classmethod
+    def letterbox_arbitrary(cls, strip, scene, align_x=0.5, align_y=0.5, strip_DAR=0.0):
         """
         :param strip: what is our target strip?  It can be a Transform strip of a Scene, Image, or Movie strip; or it can be the Scene, Image, or Movie and the Transform will be located or created.
         :param scene: the Scene the target strip lives in (used to figure out the scene resolution)
@@ -125,6 +132,7 @@ class SequencerLetterboxArbitrary:
         :param align_y:
         :return:
         """
+
         if strip is None:
             raise ValueError("You have not selected an action strip to letterbox")
 
@@ -136,7 +144,10 @@ class SequencerLetterboxArbitrary:
 
         src_strip = xform.input_1
 
-        scale_x, scale_y = cls.compute_scale(scene, src_strip)
+        if 0==strip_DAR:
+            strip_DAR = cls.compute_strip_display_aspect_ratio(src_strip)
+
+        scale_x, scale_y = cls.compute_scale(strip_DAR, scene)
 
         xform.scale_start_x = scale_x
         xform.scale_start_y = scale_y
@@ -160,7 +171,7 @@ class SequencerLetterboxArbitrary:
             src_strip.use_translation = 0
             print(src_strip.use_translation)
 
-        return xform
+        return xform, strip_DAR
 
     @classmethod
     def transform_strip_for(cls, other_strip, scene):
@@ -196,9 +207,17 @@ class SequencerLetterbox(bpy.types.Operator):
     align_y = bpy.props.FloatProperty(name="Align Y", default=0.5, min=0, max=1.0,
                                       subtype='FACTOR', precision=4, step=100,
                                       description="vertical alignment of the content.  0.0 for top; 1.0 for bottom; 0.5 for centered")
+    strip_DAR = bpy.props.FloatProperty(name="Strip display aspect ratio", default=0.0, min=0, max=100,
+                                        subtype='FACTOR', precision=3,step=10,
+                                        description="aspect ratio of the source strip.  "
+                                                    "We compute this from the strip's pixel dimensions, "
+                                                    "but it can be wrong for media with non-square pixels "
+                                                    "(such as DVDs and many other movie formats).  "
+                                                    "Blender accepts expressions like 16/9 or 4/3.")
 
     def execute(self, ctx):
-        SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y)
+        xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y, self.strip_DAR)
+        self.strip_DAR = strip_DAR
         return {'FINISHED'}
 
 
