@@ -245,6 +245,7 @@ def register():
     bpy.types.SEQUENCER_MT_strip.append(menu_func)
 
 def unregister():
+    bpy.types.SEQUENCER_MT_strip.remove(menu_func)
     bpy.utils.unregister_module(__name__)
 #    bpy.utils.unregister_class(SequencerLetterbox)
 #    bpy.utils.unregister_class(SequencerLetterboxMenu)
