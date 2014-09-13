@@ -35,6 +35,53 @@ class SequencerLetterboxArbitrary:
 
 
     @classmethod
+    def scene_pixel_aspect(cls, scene):
+        return scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
+
+    @classmethod
+    def compute_scale(cls, scene, src_strip):
+        if hasattr(src_strip, "scene"):
+            # this is a Scene strip
+            base_width = src_strip.scene.render.resolution_x
+            base_height = src_strip.scene.render.resolution_y
+        else:
+            base_width = src_strip.elements[0].orig_width
+            base_height = src_strip.elements[0].orig_height
+
+        if (base_width is None or base_height is None):
+            msg = "Unable to determine width&height of base strip.  "
+            if (src_strip.type == "IMAGE" or src_strip.type == "MOVIE"):
+                msg = msg + "blender was too lazy to parse them from the source media?"
+            else:
+                msg = msg + "Strip was " + src_strip.type + " instead of IMAGE or MOVIE."
+            raise ValueError(msg)
+
+        # this next bit is wrong for DVDs (and CableLabs VoD and anything else with non-square pixels)
+        # but blender isn't smart enough to extract it from the source media
+        if hasattr(src_strip, "orig_display_aspect_ratio") and 0 != src_strip.orig_display_aspect_ratio:
+            source_PAR = src_strip.orig_display_aspect_ratio * base_height / base_width
+            source_aspect_ratio = src_strip.orig_display_aspect_ratio
+        else:
+            if hasattr(src_strip, "scene"):
+                source_PAR = cls.scene_pixel_aspect(src_strip.scene)
+            elif hasattr(src_strip, "orig_pixel_aspect_ratio") and 0 != src_strip.orig_pixel_aspect_ratio:
+                source_PAR = src_strip.orig_pixel_aspect_ratio
+            else:
+                source_PAR = 1
+            source_aspect_ratio = base_width * source_PAR / base_height
+
+        scene_PAR = cls.scene_pixel_aspect(scene)
+        scene_aspect_ratio = scene_PAR * scene.render.resolution_x / scene.render.resolution_y
+        if scene_aspect_ratio > source_aspect_ratio:
+            # wider
+            scale_x = source_aspect_ratio / scene_aspect_ratio
+            scale_y = 1
+        else:
+            scale_x = 1
+            scale_y = scene_aspect_ratio / source_aspect_ratio
+        return scale_x, scale_y
+
+    @classmethod
     def letterbox_arbitrary(cls, strip, scene, align_x=0.5, align_y=0.5):
         if strip is None:
             raise ValueError("You have not selected an action strip to letterbox")
@@ -47,39 +94,7 @@ class SequencerLetterboxArbitrary:
 
         src_strip = xform.input_1
 
-        base_width = src_strip.elements[0].orig_width
-        base_height = src_strip.elements[0].orig_height
-
-        if (base_width is None or base_height is None):
-            msg = "Unable to determine width&height of base strip.  "
-            if (src_strip.type == "IMAGE" or src_strip.type=="MOVIE"):
-                msg = msg + "blender was too lazy to parse them from the source media?"
-            else:
-                msg = msg + "Strip was "+src_strip.type+" instead of IMAGE or MOVIE."
-            raise ValueError(msg)
-
-        # this next bit is wrong for DVDs (and CableLabs VoD and anything else with non-square pixels)
-        #  but blender isn't smart enough to extract it from the source media
-        if hasattr(src_strip, "orig_display_aspect_ratio") and 0 != src_strip.orig_display_aspect_ratio:
-            source_PAR = src_strip.orig_display_aspect_ratio * base_height / base_width
-            source_aspect_ratio = src_strip.orig_display_aspect_ratio
-        else:
-            if hasattr(src_strip, "orig_pixel_aspect_ratio") and 0 != src_strip.orig_pixel_aspect_ratio:
-                source_PAR = src_strip.orig_pixel_aspect_ratio
-            else:
-                source_PAR = 1
-            source_aspect_ratio = base_width *source_PAR / base_height
-
-        scene_PAR = scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
-        scene_aspect_ratio = scene.render.resolution_x * scene.render.pixel_aspect_x / ( scene.render.resolution_y * scene.render.pixel_aspect_y)
-
-        if scene_aspect_ratio > source_aspect_ratio:
-            # wider
-            scale_x = source_aspect_ratio / scene_aspect_ratio
-            scale_y = 1
-        else:
-            scale_x = 1
-            scale_y = scene_aspect_ratio / source_aspect_ratio
+        scale_x, scale_y = cls.compute_scale(scene, src_strip)
 
         xform.scale_start_x = scale_x
         xform.scale_start_y = scale_y
