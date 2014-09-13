@@ -190,8 +190,12 @@ class SequencerLetterbox(bpy.types.Operator):
     bl_label = "Letterbox"
     bl_options = {'REGISTER', 'UNDO'}
 
-    align_x = bpy.props.FloatProperty(name="Align X", default=0.5, min=0, max=1.0)
-    align_y = bpy.props.FloatProperty(name="Align Y", default=0.5, min=0, max=1.0)
+    align_x = bpy.props.FloatProperty(name="Align X", default=0.5, min=0, max=1.0,
+                                      subtype='FACTOR', precision=4, step=100,
+                                      description="horizontal alignment of the content.  0.0 for left; 1.0 for right; 0.5 for centered")
+    align_y = bpy.props.FloatProperty(name="Align Y", default=0.5, min=0, max=1.0,
+                                      subtype='FACTOR', precision=4, step=100,
+                                      description="vertical alignment of the content.  0.0 for top; 1.0 for bottom; 0.5 for centered")
 
     def execute(self, ctx):
         SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y)
