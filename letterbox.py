@@ -149,6 +149,9 @@ class SequencerLetterboxArbitrary:
 
         scale_x, scale_y = cls.compute_scale(strip_DAR, scene)
 
+        if (scale_x != scale_y):
+            xform.use_uniform_scale = False
+
         xform.scale_start_x = scale_x
         xform.scale_start_y = scale_y
 
