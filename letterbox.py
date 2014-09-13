@@ -8,6 +8,10 @@ bl_info = {
     "description": "A menu for adding letterboxes to VSE strips that don't have the exact same aspect ratio as the scene",
 }
 
+#
+# Thanks to Genome36 for feedback and help
+
+
 import bpy
 
 
