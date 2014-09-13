@@ -3,9 +3,9 @@ bl_info = {
     "category": "Sequencer",
     "author" : "Robert Forsman <blender@thoth.purplefrog.com>",
     "version": (0,1),
-    "blender": (2,7,1),
-    "location": "Sequence Editor > Strip",
-    "description": "A collection of operators for adding letterboxes to VSE strips that don't have the exact same aspect ratio as the scene.",
+    "blender": (2,7,2),
+    "location": "Video Sequence Editor > Strip",
+    "description": "A menu for adding letterboxes to VSE strips that don't have the exact same aspect ratio as the scene",
 }
 
 import bpy
@@ -197,9 +197,7 @@ class SequencerLetterboxArbitrary:
 
 
 class SequencerLetterbox(bpy.types.Operator):
-    """an operator which adds or ajusts the transform effect on a strip
-    to put letterboxes on the left and right or top and bottom
-    to center the content and preserve its original aspect ratio"""
+    """Add or adjust the transform effect on a strip to put letterboxes on the left and right or top and bottom to center the content and preserve its original aspect ratio"""
     bl_idname = "sequencer.letterbox_center"
     bl_label = "Letterbox"
     bl_options = {'REGISTER', 'UNDO'}
@@ -215,8 +213,8 @@ class SequencerLetterbox(bpy.types.Operator):
                                         description="aspect ratio of the source strip.  "
                                                     "We compute this from the strip's pixel dimensions, "
                                                     "but it can be wrong for media with non-square pixels "
-                                                    "(such as DVDs and many other movie formats).  "
-                                                    "Blender accepts expressions like 16/9 or 4/3.")
+                                                    "(such as DVDs and many other movie formats);  "
+                                                    "Blender accepts expressions like 16/9 or 4/3")
 
     def execute(self, ctx):
         xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y, self.strip_DAR)
