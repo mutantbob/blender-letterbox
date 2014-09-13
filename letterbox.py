@@ -221,9 +221,13 @@ class SequencerLetterbox(bpy.types.Operator):
                                                     "Blender accepts expressions like 16/9 or 4/3")
 
     def execute(self, ctx):
-        xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y, self.strip_DAR)
-        self.strip_DAR = strip_DAR
-        return {'FINISHED'}
+        try:
+            xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y, self.strip_DAR)
+            self.strip_DAR = strip_DAR
+            return {'FINISHED'}
+        except ValueError as e:
+            self.report({'INFO'}, e.args[0])
+            return {'CANCELLED'}
 
 
 #
