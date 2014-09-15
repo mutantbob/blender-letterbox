@@ -4,7 +4,7 @@ bl_info = {
     "author" : "Robert Forsman <blender@thoth.purplefrog.com>",
     "version": (0,1),
     "blender": (2,71,0),
-    "location": "Video Sequence Editor > Strip",
+    "location": "Video Sequence Editor > Strip > Letterbox",
     "warning": "",
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Sequencer/Letterbox",
     "category": "Sequencer",
