@@ -228,10 +228,10 @@ class SequencerLetterbox(bpy.types.Operator):
             self.strip_DAR = strip_DAR
             return {'FINISHED'}
         except ValueError as e:
-            self.report({'INFO'}, e.args[0])
+            self.report({'ERROR'}, e.args[0])
             return {'CANCELLED'}
         except AttributeError as e:
-            self.report({'INFO'}, e.args[0])
+            self.report({'ERROR'}, e.args[0])
             return {'CANCELLED'}
 
 
