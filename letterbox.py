@@ -230,6 +230,9 @@ class SequencerLetterbox(bpy.types.Operator):
         except ValueError as e:
             self.report({'INFO'}, e.args[0])
             return {'CANCELLED'}
+        except AttributeError as e:
+            self.report({'INFO'}, e.args[0])
+            return {'CANCELLED'}
 
 
 #
