@@ -184,8 +184,6 @@ class SequencerLetterboxArbitrary:
             src_strip.use_translation = 0
             print(src_strip.use_translation)
 
-        xform.blend_type = 'ALPHA_OVER'
-
         return xform, strip_DAR
 
     @classmethod
@@ -205,6 +203,8 @@ class SequencerLetterboxArbitrary:
                                                             seq1=other_strip)
         # because somehow setting frame_end in the previous method call accomplishes nothing
         effect.update()
+
+        effect.blend_type = 'ALPHA_OVER'
 
         return effect
 
