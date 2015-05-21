@@ -87,12 +87,15 @@ class SequencerLetterboxArbitrary:
     @classmethod
     def compute_strip_display_aspect_ratio(cls, src_strip):
         if hasattr(src_strip, "scene"):
-            # this is a Scene strip
+            # this is a Scene strip, or something close enough.
             base_width = src_strip.scene.render.resolution_x
             base_height = src_strip.scene.render.resolution_y
-        else:
+        elif src_strip.type == 'IMAGE':
             base_width = src_strip.elements[0].orig_width
             base_height = src_strip.elements[0].orig_height
+        else:
+            raise ValueError("unable to compute display aspect ratio for %s strip"%src_strip.type)
+
         if (base_width is None or base_height is None):
             msg = "Unable to determine width&height of base strip.  "
             if (src_strip.type == "IMAGE" or src_strip.type == "MOVIE"):
@@ -145,7 +148,6 @@ class SequencerLetterboxArbitrary:
         if (strip.type == 'TRANSFORM'):
             xform = strip
         else :
-            # XXX what if the active strip is sound? or something else wrong??
             xform = SequencerLetterboxArbitrary.transform_strip_for(strip, scene)
 
         src_strip = xform.input_1
@@ -190,6 +192,10 @@ class SequencerLetterboxArbitrary:
         ch = other_strip.channel+1
         s = other_strip.frame_start
         e = s + other_strip.frame_final_duration - 1
+
+        if other_strip.type=='SOUND':
+            raise ValueError("you can not letterbox Sound strips")
+
         #print("%d, %d"%(s,e))
         effect = scene.sequence_editor.sequences.new_effect("Letterbox", 'TRANSFORM', ch, s, frame_end=e,
                                                             seq1=other_strip)
