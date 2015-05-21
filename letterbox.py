@@ -182,6 +182,8 @@ class SequencerLetterboxArbitrary:
             src_strip.use_translation = 0
             print(src_strip.use_translation)
 
+        xform.blend_type = 'ALPHA_OVER'
+
         return xform, strip_DAR
 
     @classmethod
