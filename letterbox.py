@@ -165,7 +165,7 @@ class SequencerLetterboxArbitrary:
         xform.scale_start_x = scale_x
         xform.scale_start_y = scale_y
 
-        print(scene.render.resolution_x*(1-scale_x))
+        #print(scene.render.resolution_x*(1-scale_x))
 
         xlate_x = scene.render.resolution_x * (1 - scale_x) * (align_x - 0.5)
         xlate_y = scene.render.resolution_y * (1 - scale_y) * (align_y - 0.5)
