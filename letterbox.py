@@ -145,17 +145,17 @@ class SequencerLetterboxArbitrary:
         if strip is None:
             raise ValueError("You have not selected an action strip to letterbox")
 
+        if 0==strip_DAR:
+            strip_DAR = cls.compute_strip_display_aspect_ratio(strip)
+
+        scale_x, scale_y = cls.compute_scale(strip_DAR, scene)
+
         if (strip.type == 'TRANSFORM'):
             xform = strip
         else :
             xform = SequencerLetterboxArbitrary.transform_strip_for(strip, scene)
 
         src_strip = xform.input_1
-
-        if 0==strip_DAR:
-            strip_DAR = cls.compute_strip_display_aspect_ratio(src_strip)
-
-        scale_x, scale_y = cls.compute_scale(strip_DAR, scene)
 
         if (scale_x != scale_y):
             xform.use_uniform_scale = False
