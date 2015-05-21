@@ -178,7 +178,7 @@ class SequencerLetterboxArbitrary:
         # I don't feel like adding extra code to handle the Image Offset checkbox just yet.
         src_strip.use_translation = False
         if (src_strip.use_translation):
-            print("what is this bullshit? (%s)"%src_strip.use_translation)
+            print("python, you fail at booleans (%r)"%src_strip.use_translation)
             src_strip.use_translation = 0
             print(src_strip.use_translation)
 
