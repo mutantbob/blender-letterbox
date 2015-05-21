@@ -93,6 +93,8 @@ class SequencerLetterboxArbitrary:
         elif src_strip.type == 'IMAGE':
             base_width = src_strip.elements[0].orig_width
             base_height = src_strip.elements[0].orig_height
+        elif hasattr(src_strip, "input_1"):
+            return cls.compute_strip_display_aspect_ratio(src_strip.input_1)
         else:
             raise ValueError("unable to compute display aspect ratio for %s strip"%src_strip.type)
 
