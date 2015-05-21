@@ -265,8 +265,5 @@ def unregister():
 #    bpy.utils.unregister_class(SequencerLetterboxMenu)
 
 if __name__ == "__main__":
-    try:
-        unregister()
-    except:
-        pass
+    unregister()
     register()
