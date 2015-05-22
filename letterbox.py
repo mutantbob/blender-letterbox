@@ -88,14 +88,15 @@ class SequencerLetterboxArbitrary:
 
     @classmethod
     def compute_strip_display_aspect_ratio(cls, src_strip):
-        if hasattr(src_strip, "scene"):
+        if src_strip.type == 'SCENE':
             # this is a Scene strip, or something close enough.
             base_width = src_strip.scene.render.resolution_x
             base_height = src_strip.scene.render.resolution_y
-        elif src_strip.type == 'IMAGE':
+        elif src_strip.type == 'IMAGE' or src_strip.type=='MOVIE':
             base_width = src_strip.elements[0].orig_width
             base_height = src_strip.elements[0].orig_height
         elif hasattr(src_strip, "input_1"):
+            # I am not adding an if clause for every effect strip
             return cls.compute_strip_display_aspect_ratio(src_strip.input_1)
         else:
             return "unable to compute display aspect ratio for %s strip"%src_strip.type, None
@@ -114,7 +115,7 @@ class SequencerLetterboxArbitrary:
             source_PAR = src_strip.orig_display_aspect_ratio * base_height / base_width
             source_aspect_ratio = src_strip.orig_display_aspect_ratio
         else:
-            if hasattr(src_strip, "scene"):
+            if src_strip.type == 'SCENE':
                 source_PAR = cls.scene_pixel_aspect(src_strip.scene)
             elif hasattr(src_strip, "orig_pixel_aspect_ratio") and 0 != src_strip.orig_pixel_aspect_ratio:
                 source_PAR = src_strip.orig_pixel_aspect_ratio
