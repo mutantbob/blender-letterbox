@@ -61,13 +61,15 @@ class SequencerLetterboxArbitrary:
     @classmethod
     def letterbox_arbitrary_op(cls, scene, align_x=0.5, align_y=0.5, strip_DAR=0.0):
 
-        xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary(scene.sequence_editor.active_strip, scene, align_x, align_y, strip_DAR)
+        malfunction, xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary(scene.sequence_editor.active_strip, scene, align_x, align_y, strip_DAR)
+        if malfunction:
+            return malfunction, None, None
 
         for strip in scene.sequence_editor.sequences:
             strip.select = ( strip == xform )
         scene.sequence_editor.active_strip = xform
 
-        return xform, strip_DAR
+        return False, xform, strip_DAR
 
     @classmethod
     def scene_pixel_aspect(cls, scene):
@@ -96,7 +98,7 @@ class SequencerLetterboxArbitrary:
         elif hasattr(src_strip, "input_1"):
             return cls.compute_strip_display_aspect_ratio(src_strip.input_1)
         else:
-            raise ValueError("unable to compute display aspect ratio for %s strip"%src_strip.type)
+            return "unable to compute display aspect ratio for %s strip"%src_strip.type, None
 
         if (base_width is None or base_height is None):
             msg = "Unable to determine width&height of base strip.  "
@@ -104,7 +106,7 @@ class SequencerLetterboxArbitrary:
                 msg = msg + "blender was too lazy to parse them from the source media?"
             else:
                 msg = msg + "Strip was " + src_strip.type + " instead of IMAGE or MOVIE."
-            raise ValueError(msg)
+            return msg, None
 
         # this next bit is wrong for DVDs (and CableLabs VoD and anything else with non-square pixels)
         # but blender isn't smart enough to extract it from the source media
@@ -119,7 +121,7 @@ class SequencerLetterboxArbitrary:
             else:
                 source_PAR = 1
             source_aspect_ratio = base_width * source_PAR / base_height
-        return source_aspect_ratio
+        return False, source_aspect_ratio
 
     @classmethod
     def compute_scene_display_aspect_ratio(cls, scene):
@@ -145,10 +147,14 @@ class SequencerLetterboxArbitrary:
         """
 
         if strip is None:
-            raise ValueError("You have not selected an action strip to letterbox")
+            return "You have not selected an action strip to letterbox", None, None
 
         if 0==strip_DAR:
-            strip_DAR = cls.compute_strip_display_aspect_ratio(strip)
+            malfunction, strip_DAR = cls.compute_strip_display_aspect_ratio(strip)
+            print([ malfunction, strip_DAR])
+            if malfunction:
+                # I don't like this style of code, but it is in fashion
+                return malfunction, None, None
 
         scale_x, scale_y = cls.compute_scale(strip_DAR, scene)
 
@@ -184,7 +190,7 @@ class SequencerLetterboxArbitrary:
             src_strip.use_translation = 0
             print(src_strip.use_translation)
 
-        return xform, strip_DAR
+        return False, xform, strip_DAR
 
     @classmethod
     def transform_strip_for(cls, other_strip, scene):
@@ -235,13 +241,14 @@ class SequencerLetterbox(bpy.types.Operator):
 
     def execute(self, ctx):
         try:
-            xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y, self.strip_DAR)
-            self.strip_DAR = strip_DAR
-            return {'FINISHED'}
-        except ValueError as e:
-            self.report({'ERROR'}, e.args[0])
-            return {'CANCELLED'}
-        except AttributeError as e:
+            malfunction, xform, strip_DAR = SequencerLetterboxArbitrary.letterbox_arbitrary_op(ctx.scene, self.align_x, self.align_y, self.strip_DAR)
+            if malfunction:
+                self.report({'ERROR'}, malfunction)
+                return {'CANCELLED'}
+            else:
+                self.strip_DAR = strip_DAR
+                return {'FINISHED'}
+        except BaseException as e:
             self.report({'ERROR'}, e.args[0])
             return {'CANCELLED'}
 
