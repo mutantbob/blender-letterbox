@@ -224,7 +224,6 @@ class SequencerLetterbox(bpy.types.Operator):
     bl_idname = "sequencer.letterbox_center"
     bl_label = "Letterbox"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_region_type='UI'
 
     align_x = bpy.props.FloatProperty(name="Align X", default=0.5, min=0, max=1.0,
                                       subtype='FACTOR', precision=4, step=100,
