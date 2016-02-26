@@ -246,7 +246,7 @@ class SequencerLetterbox(bpy.types.Operator):
                 self.report({'ERROR'}, malfunction)
                 return {'CANCELLED'}
             else:
-                self.strip_DAR = strip_DAR
+                #self.strip_DAR = strip_DAR
                 return {'FINISHED'}
         except BaseException as e:
             self.report({'ERROR'}, e.args[0])
